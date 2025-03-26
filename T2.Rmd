@@ -1,0 +1,84 @@
+---
+title: "Climate Data Analysis"
+author: "Imran"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## 📌 Introduction
+This report analyzes global temperature changes over time using the **GlobalTemperatures.csv** dataset.  
+The report includes:  
+- A **line chart** showing global temperature trends.  
+- A **scatter plot** of CO₂ emissions vs. temperature anomaly.  
+
+---
+
+```{r setup, include=FALSE}
+# Load necessary libraries
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 5)
+library(ggplot2)
+library(dplyr)
+
+# Set working directory (modify accordingly)
+setwd("C:\\Users\\Student\\Desktop\\PFAI_LUFFY\\OEL\\T2") 
+
+# Load the dataset
+data <- read.csv("GlobalTemperatures.csv")
+
+# Convert dt column to Date format
+data$dt <- as.Date(data$dt, format="%Y-%m-%d")
+
+# Extract Year
+data$Year <- as.numeric(format(data$dt, "%Y"))
+
+# Remove rows with NA values inLandAverageTemperature
+data <- data %>% filter(!is.na(LandAverageTemperature))
+
+# Aggregate yearly average temperature
+yearly_data <- data %>%
+  group_by(Year) %>%
+  summarise(AverageTemperature = mean(LandAverageTemperature, na.rm = TRUE))
+
+# Display first few rows
+head(data)
+
+# Check for missing values
+colSums(is.na(data))
+
+# Ensure data is not empty
+if (nrow(yearly_data) == 0) {
+  stop("Error: No valid temperature data available after filtering.")
+}
+
+# Create line chart
+ggplot(yearly_data, aes(x = Year, y = AverageTemperature)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Global Temperature Change Over Time", 
+       x = "Year", y = "Temperature (°C)") +
+  theme_minimal()
+
+
+# Assuming a column for CO2 emissions exists, replace 'CO2_Emissions' with actual column name
+if ("CO2_Emissions" %in% colnames(data)) {
+  ggplot(data, aes(x = CO2_Emissions, y = LandAverageTemperature)) +
+    geom_point(color = "red", alpha = 0.5) +
+    labs(title = "CO₂ Emissions vs. Temperature Anomaly", 
+         x = "CO₂ Emissions", y = "Temperature (°C)") +
+    theme_minimal()
+} else {
+  print("No CO₂ emissions data available in the dataset.")
+}
+
+```{r plot_temperature, echo=FALSE, fig.width=8, fig.height=5}
+# Ensure data is not empty
+if (nrow(yearly_data) > 0) {
+  print(
+    ggplot(yearly_data, aes(x = Year, y = AverageTemperature)) +
+      geom_line(color = "blue", size = 1) +
+      labs(title = "Global Temperature Change Over Time", 
+           x = "Year", y = "Temperature (°C)") +
+      theme_minimal()
+  )
+} else {
+  print("No valid data available for plotting.")
+}
